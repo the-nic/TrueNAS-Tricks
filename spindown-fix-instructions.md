@@ -1,31 +1,56 @@
-# TrueNAS Spindown Fix Script Instructions
+# TrueNAS Spindown-Fix Script Instructions
 
-## Preparing the Script
+## 1. Preparing the script
 
-### 1. Place these files in the same TrueNAS directory, eg. `/home/trunas_admin`
+Place these files in the same TrueNAS directory, eg. `/home/trunas_admin`
 
 ```bash
 spindown-fix.sh
 spindown-v25.patch or spindown-v26.patch
 ```
+---
 
+### 1.1. Optional: Tune the SMART polling interval
 
+The patch ensures that SMART will only ever poll awake disks.
 
 > [!NOTE]
-> Note: If your TrueNAS system uses ZFS dataset encryption, you must follow [this extra step](https://github.com/itiligent/TrueNAS-Tricks/blob/main/spindown-fix-with-zfs-encryption.md) before proceeding further.
+> If your HDD standby timeout is **6 hours or longer**, you must increase the  SMART polling `IntervalSchedule` of  `360` minutes set by the patch. 
+> 
+> Why?
+>
+> If SMART polling hits an awake disk before it reaches standby, it resets the standby timer and prevents the disk from ever sleeping.
+> 
+> Be aware that increasing this polling interval increases SMART telemetry latency. Health, temperature, and alert updates may take up to the maximum interval to appear, so keep this interval set to something sensible.
+>
+> The 6 hour SMART polling interval set by the patch is just a general suggestion. It can also be reduced for shorter HDD standby timeouts. The simple rule is that **this interval must always be longer than the disk standby timeout.**  The TrueNAS default is **90 minutes**, a main cause of disks regularly being awoken/kept awake by background tasks.
+> 
+> Tip: Always set the SMART polling interval at least 15mins greater than your HDD standby timout as TrueNAS schedules tend to be inexact.   
 
+```bash
+nano spindown-[version].patch
+```
+
+Look for this line and edit:
+```bash
+schedule = IntervalSchedule(timedelta(minutes=numeric_value_in_minutes))
+```
+
+
+### 1.2. Only If Using ZFS Encryption 
+> [!Warning]
+> Certain ZFS encryption tasks must periodically wake disks, but the patch disables these. You **must** follow [this extra step](https://github.com/itiligent/TrueNAS-Tricks/blob/main/spindown-fix-with-zfs-encryption.md) to re-enable these tasks before proceeding further.
 
 ---
 
-### 2. Edit the script's `OVERLAY=` & `PATCH=` values to your required settings:
 
+## 2. Edit the script's `OVERLAY=` & `PATCH=` values to your required settings:
 
 ```bash
 nano spindown-fix.sh
 ```
 
 Choose an overaly location that is available at boot. This path must be on an SSD pool.
-
 ```bash
 OVERLAY="/mnt/your_preferred_ssd_tank/overlay"
 ```
@@ -34,18 +59,15 @@ Configure the script to use the correct patch version:
 ```bash
 PATCH="$SCRIPT_DIR/spindown-[version].patch"
 ```
-
 ---
 
-### 3. Make the script executable
-
+## 3. Make the script executable
 ```bash
 chmod +x spindown-fix.sh
 ```
-
 ---
 
-## Running the Script
+## 4. Running the Script
 
 The script needs to be run several times with different arguments to complete all the configuration stages in sequence.
 
@@ -89,12 +111,10 @@ This command:
 * Bind-mounts the patched overlay files over the native TrueNAS system files.
 * Restarts `middlewared`
 
-After this step, TrueNAS should now be using the patched middleware files. 
-
 > [!NOTE]
-> These settings will not yet remain after a reboot, boot persitence
-> is configured in a following step.
-
+> After this step, TrueNAS should be using the patched middleware files.
+> This change is not yet persistent across reboots.
+> Boot persistence is configured in a later step.
 ---
 
 ### 4th Run Argument
@@ -117,10 +137,10 @@ sudo bash ./spindown-fix.sh boot-script
 
 This command:
 
-* Creates a custom script in the current directory to mount the new overalys at boot.
-* Prints on screen the exact TrueNAS command you will need to call the newly created Init script.
+* Creates a custom boot script to mount the new overalys at on startup.
+* Prints on screen the exact TrueNAS init command you will need to call the newly created boot script.
 
-Next, add the provided Init command under **System | Advanced Settings | Init/Shutdown scripts** with these additional settings:
+Next, add the provided init command under **System | Advanced Settings | Init/Shutdown scripts** with these additional settings:
 
 ```text
 Type: Command
@@ -131,8 +151,8 @@ Timeout: 60 seconds or higher
 
 > [!NOTE]
 > Note: On some systems, the overlays may not mount quickly enough during boot requiring a middleware restart, but this can clobber app services if done during startup.
->
-> If after boot `sudo bash spindown-fix.sh status` shows the overlays is did not mount, or if the apps service is not running after boot, run the Pre Init boot script with a delayed middleware restart:
+> 
+> If `sudo bash spindown-fix.sh status` shows the overlays is did not mount at boot, or if the apps service is not running after boot, run the boot script with a delayed middleware restart:
 >
 > ```bash
 > ENABLE_DELAYED_RESTART=yes DELAY_SECONDS=300 bash /path/to/spindown-overlay-mount.sh
@@ -165,7 +185,7 @@ sudo bash ./spindown-fix.sh unmount
 5. Repeat the patching process for the updated TrueNAS system
 > [!NOTE]
 > If you have performed a major TrueNAS version upgrade, you must 
-> download the new version patch and then modify the `PATCH=` setting in `spindown-fix.sh`
+> download the new version patch and then modify `PATCH=` setting in `spindown-fix.sh` plus re-do any above patch customisations. 
  
  ```bash
 PATCH="$SCRIPT_DIR/spindown-[verion].patch"
