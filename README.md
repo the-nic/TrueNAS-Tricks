@@ -13,7 +13,7 @@
 
 `hdd-wake-trace.sh` is an advanced diagnostic tool for TrueNAS SCALE that helps identify **what is waking HDDs from standby** in a ZFS pool.
 
-The script monitors rotational disks in a selected TrueNAS pool. When one or more disks transition from `standby` or `sleeping` to `active/idle`, it creates detailed wake-event logs and correlates system activity across a configurable time window before and after the wake event.
+The script monitors spinning disks in a selected TrueNAS pool. When one or more disks transition from `standby` or `sleeping` to `active/idle`, it creates detailed wake-event logs and correlates system activity across a configurable time window before and after the wake event.
 
 It can help trace recurring wake causes across areas such as:
 
