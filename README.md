@@ -44,6 +44,6 @@ The included companion script, `smart-report-api-key-setup.sh`, helps install a 
 
 `external-usb.sh` is an interactive Bash utility for safely mounting and unmounting external USB storage devices on TrueNAS.
 
-The script automatically detects connected USB partitions, presents them in a device selection menu, and mounts the chosen device to a fixed mountpoint (`/mnt/external`) with shared read/write access enabled.  The script also sets compatible permissions and ownership settings for data on the external USB mountpoint to allow for easy compatibiltiy between TrueNAS and any other Linux host. 
+The script automatically detects connected USB partitions, presents them in a device selection menu, and mounts the chosen device to a fixed mountpoint (`/mnt/external`) with shared read/write access enabled.  The script also sets compatible permissions and ownership settings for data on the external USB mountpoint to allow for easy permissions compatibiltiy between TrueNAS and regular Linux hosts. 
 
 
