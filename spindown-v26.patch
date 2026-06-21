@@ -70,7 +70,7 @@
  import middlewared.sqlalchemy as sa
 -from middlewared.utils import ProductType
 +from middlewared.utils import ProductType, MIDDLEWARE_RUN_DIR
- from middlewared.utils.sed import sed_status
+ from middlewared.utils.disks_.disk_class import DiskEntry as DiskEntryObj
 
 
 @@ -247,6 +247,21 @@
