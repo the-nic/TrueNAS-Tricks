@@ -29,6 +29,9 @@ SCRIPT_PATH="$(readlink -f "$0")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 
 # Patch file must be in the same directory as this script. Choose the correct patch version for your system!!
+# TrueNAS v25 -> spindown-v25.patch
+# TrueNAS v26 -> spindown-v26.patch
+# TrueNAS v27 -> spindown-v27.patch
 PATCH="$SCRIPT_DIR/spindown-v25.patch"
 
 # Boot helper script will also be generated in the same directory as this script.
